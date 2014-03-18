@@ -8,17 +8,23 @@ If the payload is not correct, an error response is sent.
 
 To add validation to your actions, use the following format:
 
-    namespace eval Action::set-nickname {
+    namespace eval Action::formsubmit {
 
-        #
-        #   Add validation variable to namespace
-        #
         variable validate {
-            name: required, min 3, max 40
-            digits: required, number
-            send-to: required, mail
-            start-date: required, date
-            end-date: date
+            nickname: required, min 3, max 16
+            name: required, min 3
+            email: email
+            password: required, min 8
+            confirmpassword: required, equals "password" "The passwords do not match"
+            gender: required, options {male female}
+            birthday: required, date
+            accept: required, options { true }
+        }
+
+
+        proc on-message {chan message} { 
+
+            app'load-page $chan "nickname"
         }
 
     }
@@ -30,7 +36,7 @@ To create your own validators, extend the "Validator" namespace and add your fun
     namespace eval Validator {
 
         #
-        #   Determines whether key exists
+        #   Determines whether key exists and if value is smaller than `minvalue`
         #
         proc min-value {minvalue name input_list} {
 

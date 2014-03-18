@@ -42,7 +42,7 @@ namespace eval Validator {
 		foreach validator $validators {
 			set error [check-for-error $validator $name $info_list]
 			if {$error != ""} then {
-				lappend errors $error
+				lappend errors [list $name $error]
 			}
 		}
 	}
@@ -80,13 +80,23 @@ namespace eval Validator {
 	#
 	proc send-response {chan input errorlist} {
 
+		# create a response structure
 		array set response [jsonrpc'respond-to $input]
 
 		set response(state) [j' "error"]
-		set response(errors) [j'list $errorlist]
 
-		parray response
+		lappend formatted_errors
+		foreach err $errorlist {
+			
+			lassign $err name message
+			set f_err(name) [j' $name]
+			set f_err(message) [j' $message]
 
+			lappend formatted_errors [json::array f_err]
+		}
+		set response(errors) [json::list $formatted_errors]
+
+		# send this as a response to the channel that originally sent the request
 		Websocket::send-message $chan [json::encode [json::array response]]
 	}
 
